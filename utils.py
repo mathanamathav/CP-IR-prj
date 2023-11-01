@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import util,SentenceTransformer
 from sklearn.metrics.pairwise import linear_kernel
+from sklearn.metrics.pairwise import cosine_similarity
 from collections import Counter
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import networkx as nx
+import streamlit as st
+import re
 
 
 def rank_to_text(rank):
@@ -14,7 +18,6 @@ def rank_to_text(rank):
     ids = list(sorted_dict.keys())[:10]
     result_df = df[df["Question ID"].isin(ids)]
     return result_df
-
 
 def eign_rank(G):
     M = nx.to_numpy_array(G)
@@ -125,7 +128,6 @@ def plot_rank_graph(G, title, ranks):
 def flip(p):
     return np.random.random() < p
 
-
 def random_walk(G, alpha=0.85, iters=1000):
     counter = Counter()
     node = next(iter(G))
@@ -144,34 +146,52 @@ def random_walk(G, alpha=0.85, iters=1000):
     return counter
 
 
-def recommend_similar_questions(title, num_recommendations=5):
+def recommend_similar_questions(df,X, vectorizer, query, num_recommendations=5):
+    query_vec = vectorizer.transform([query])
+    results = cosine_similarity(X, query_vec)
+    res = results.flatten()
+    out_arr = np.argsort(res)
+    return [df.iloc[i, 3] for i in out_arr[-num_recommendations:] if df.iloc[i, 3].strip() != "" ]
+
+def preprocess_text(text):
+    cleaned_text = re.sub(r"[^a-zA-Z0-9\s]", "", text)
+    cleaned_text = cleaned_text.lower()
+    return cleaned_text
+
+@st.cache_resource
+def create_df_emb():
+
+    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     df = pd.read_csv("Data/leetcode_questions.csv")
+    df["Question Text"] = df["Question Text"].fillna("")
 
-    similar_questions = df[
-        ["Similar Questions ID", "Question Title", "Similar Questions Text"]
+    df["Question Text"] = df["Question Text"].apply(preprocess_text)
+    question1 = df["Question Text"].tolist()
+    questions = [item for item in question1 if item != ""]
+
+    embedding = []
+    for question in questions:
+        embedding.append(model.encode(question, convert_to_tensor=True))
+
+    vectorizer = TfidfVectorizer()
+    X = vectorizer.fit_transform(questions)
+
+    return df, embedding, questions, vectorizer , X , model
+
+
+def recommend_similar_questions_using_transformer(
+    embedding, questions, model, query, num_recommendations=10
+):
+    query = preprocess_text(query)
+    query_emb = model.encode(query, convert_to_tensor=True)
+
+    score = []
+    for emb in embedding:
+        score.append(util.pytorch_cos_sim(emb, query_emb).item())
+
+    similar_question_indices = np.argsort(score)[::-1]
+
+    top_similar_questions = [
+        questions[i] for i in similar_question_indices[1 : num_recommendations + 1]
     ]
-
-    similar_questions["Similar Questions Text"].fillna("", inplace=True)
-
-    tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform(
-        similar_questions["Similar Questions Text"]
-    )
-
-    cosine_similarities = linear_kernel(tfidf_matrix, tfidf_matrix)
-    title_to_index = {title: index for index, title in enumerate(df["Question Title"])}
-
-    question_index = title_to_index.get(title)
-
-    if question_index is None:
-        return []
-
-    sim_scores = list(enumerate(cosine_similarities[question_index]))
-
-    sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-
-    similar_question_indices = [
-        index for index, _ in sim_scores[1 : num_recommendations + 1]
-    ]
-
-    return df["Question Title"].iloc[similar_question_indices]
+    return top_similar_questions

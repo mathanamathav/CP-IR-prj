@@ -1,7 +1,12 @@
 import streamlit as st
-from utils import recommend_similar_questions
+from utils import (
+    recommend_similar_questions,
+    recommend_similar_questions_using_transformer,
+    create_df_emb,
+)
 
 st.set_page_config(page_title="Recommendation", page_icon="⁉️", layout="wide")
+df, embedding, questions, vectorizer, X, model = create_df_emb()
 
 st.markdown(
     """
@@ -19,15 +24,29 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-st.title("Coding Question Recommender")
+st.title("CP similar question Recommender")
 
-question_title = st.text_input("Enter the topic", "")
+query = st.text_input("Enter the Query", "")
 
-if st.button("Recommend Similar Questions"):
-    recommended_questions = recommend_similar_questions(question_title, num_recommendations=5)
+if st.button("Search"):
+    recommended_questions_normal = recommend_similar_questions(
+        df, X, vectorizer, query, num_recommendations=5
+    )
+
+    recommended_questions = recommend_similar_questions_using_transformer(
+        embedding, questions, model, query, num_recommendations=5
+    )
+
+    if recommended_questions_normal:
+        st.subheader("Normal Method")
+        st.write("Recommended Similar Questions:")
+        st.dataframe(recommended_questions_normal, use_container_width=True)
+    else:
+        st.write("No similar questions found for this topic using normal tokens")
 
     if recommended_questions:
+        st.subheader("Transformer Method")
         st.write("Recommended Similar Questions:")
-        st.table(recommended_questions)
+        st.dataframe(recommended_questions, use_container_width=True)
     else:
         st.write("No similar questions found for this topic.")
