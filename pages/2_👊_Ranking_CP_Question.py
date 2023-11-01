@@ -40,7 +40,7 @@ st.markdown(
     """
 )
 
-G = preprocess_convert_graph()
+G ,df = preprocess_convert_graph()
 pagerank = nx.pagerank(G)
 st.plotly_chart(
     plot_rank_graph(G, "Networkx Package", pagerank), use_container_width=True

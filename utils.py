@@ -50,7 +50,7 @@ def adj_rank(G):
     ranks_am = x / x.sum()
     return ranks_am
 
-
+@st.cache_data
 def preprocess_convert_graph():
     df = pd.read_csv("Data/leetcode_questions.csv")
     graph_df = df[["Question ID", "Similar Questions ID", "Question Title"]]
@@ -62,7 +62,7 @@ def preprocess_convert_graph():
     graph_df = graph_df.reset_index(drop=True)
     graph_df["Similar Question ID"] = graph_df["Similar Question ID"].astype("int")
     G = nx.from_pandas_edgelist(graph_df, "Question ID", "Similar Question ID")
-    return G
+    return G,df
 
 
 def plot_rank_graph(G, title, ranks):
