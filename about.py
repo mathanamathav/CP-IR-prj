@@ -41,10 +41,10 @@ st.markdown(
 )
 
 
-image = Image.open('Images\leetcode.png')
+image = Image.open('Images/leetcode.png')
 st.image(image,use_column_width=True)
 
 
 
-image = Image.open('Images\Search-Engines-and-Page-Ranking.png')
+image = Image.open('Images/Search-Engines-and-Page-Ranking.png')
 st.image(image,use_column_width=True)
