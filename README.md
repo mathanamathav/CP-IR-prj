@@ -6,7 +6,7 @@
 <h3 align="center">CP search</h3>
 
   <p align="center">
-      An Information Retrieval (IR) project that ranks and suggests questions to users by considering their success rates, leveraging data-driven insights. Additionally, the system recommends coding problems aligned with specific user-selected topics, enhancing the user's learning experience.
+     Competitive programming is highly popular and immensely valuable for students during placement preparation, as it aids in comprehending Data Structures and Algorithms (DSA). As part of an Information Retrieval package, integrating competitive programming can be achieved by recommending problems to users. Various methods exist to accomplish this. Ranking and displaying problems on the website are fundamental aspects of the project.
     <br />
     <a href="https://cpirprj.streamlit.app/">View Demo</a>
     ·
@@ -16,6 +16,9 @@
   </p>
 </div>
 
+## Approach Notes:
+
+The full presentation explaining how it is built can be found in this [link](https://www.canva.com/design/DAFy513tAFY/I5RSQgjy1bkWyudouB1mkg/edit?utm_content=DAFy513tAFY&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton), and the [abstract](https://docs.google.com/document/d/1exaPVP8jJ7QVPZKTdStbUIaLkJ2OobirSh3ZxnD5qKA/edit?usp=sharing) provides a concise summary of the project.
 ## PLAN:
 
 ![IRCPPRJ](https://github.com/mathanamathav/CP-IR-prj/assets/62739618/c12e818d-a6b5-42d6-a8fd-ce25fcb512d0)
