@@ -7,6 +7,15 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import networkx as nx
 
+
+def rank_to_text(rank):
+    sorted_dict = dict(sorted(rank.items(), key=lambda item: item[1], reverse=True))
+    df = pd.read_csv("Data/leetcode_questions.csv")
+    ids = list(sorted_dict.keys())[:10]
+    result_df = df[df["Question ID"].isin(ids)]
+    return result_df
+
+
 def eign_rank(G):
     M = nx.to_numpy_array(G)
     alpha = 0.85
@@ -19,17 +28,18 @@ def eign_rank(G):
     ind = np.argmax(eigenvalues)
     largest_eigenvector = np.real(eigenvectors[:, ind])
     ranks_ev = largest_eigenvector / largest_eigenvector.sum()
-    
+
     return ranks_ev
+
 
 def adj_rank(G):
     M = nx.to_numpy_array(G)
     N = len(G)
 
-    p = np.full(N, 1/N)
+    p = np.full(N, 1 / N)
     alpha = 0.85
     GM = alpha * M + (1 - alpha) * p
-    x = np.full(N, 1/N)
+    x = np.full(N, 1 / N)
 
     for i in range(10):
         x = GM.T @ x
@@ -37,20 +47,22 @@ def adj_rank(G):
     ranks_am = x / x.sum()
     return ranks_am
 
+
 def preprocess_convert_graph():
     df = pd.read_csv("Data/leetcode_questions.csv")
-    graph_df = df[['Question ID' , 'Similar Questions ID' , 'Question Title']]
-    graph_df.dropna( inplace = True )
+    graph_df = df[["Question ID", "Similar Questions ID", "Question Title"]]
+    graph_df.dropna(inplace=True)
 
-    graph_df['Similar Questions ID'] = graph_df['Similar Questions ID'].str.split(',')
-    graph_df = graph_df.explode('Similar Questions ID')
-    graph_df = graph_df.rename(columns={'Similar Questions ID': 'Similar Question ID'})
+    graph_df["Similar Questions ID"] = graph_df["Similar Questions ID"].str.split(",")
+    graph_df = graph_df.explode("Similar Questions ID")
+    graph_df = graph_df.rename(columns={"Similar Questions ID": "Similar Question ID"})
     graph_df = graph_df.reset_index(drop=True)
-    graph_df['Similar Question ID'] = graph_df['Similar Question ID'].astype('int')
+    graph_df["Similar Question ID"] = graph_df["Similar Question ID"].astype("int")
     G = nx.from_pandas_edgelist(graph_df, "Question ID", "Similar Question ID")
     return G
 
-def plot_rank_graph(G , title , ranks):
+
+def plot_rank_graph(G, title, ranks):
     fig = make_subplots(rows=1, cols=1)
     pos = nx.spring_layout(G)
 
@@ -59,15 +71,18 @@ def plot_rank_graph(G , title , ranks):
     node_y = [pos[k][1] for k in G.nodes]
 
     # Create a list of labels with PageRank values
-    labels = [f'Node {k}<br>PageRank: {ranks[k]:.3f}' for k in G.nodes]
+    labels = [f"Node {k}<br>PageRank: {ranks[k]:.3f}" for k in G.nodes]
 
     # Create a scatter plot for nodes
     node_trace = go.Scatter(
-        x=node_x, y=node_y,
-        mode='markers',
-        marker=dict(size=[v * 5000 for v in ranks.values()], showscale=True, colorscale='YlGnBu' ),
+        x=node_x,
+        y=node_y,
+        mode="markers",
+        marker=dict(
+            size=[v * 5000 for v in ranks.values()], showscale=True, colorscale="YlGnBu"
+        ),
         text=labels,
-        hoverinfo='text'
+        hoverinfo="text",
     )
 
     # Create edges
@@ -85,10 +100,11 @@ def plot_rank_graph(G , title , ranks):
 
     # Create an edge trace
     edge_trace = go.Scatter(
-        x=edge_x, y=edge_y,
-        line=dict(width=0.5, color='#888'),
-        hoverinfo='none',
-        mode='lines'
+        x=edge_x,
+        y=edge_y,
+        line=dict(width=0.5, color="#888"),
+        hoverinfo="none",
+        mode="lines",
     )
 
     # Add traces to the figure
@@ -98,41 +114,49 @@ def plot_rank_graph(G , title , ranks):
     # Update layout
     fig.update_layout(
         showlegend=False,
-        hovermode='closest',
-        title_text='Interactive {} PageRank Graph'.format(title),
+        hovermode="closest",
+        title_text="Interactive {} PageRank Graph".format(title),
+        height=1000,
     )
 
     return fig
 
+
 def flip(p):
     return np.random.random() < p
+
 
 def random_walk(G, alpha=0.85, iters=1000):
     counter = Counter()
     node = next(iter(G))
-    
+
     for _ in range(iters):
         if flip(alpha):
             node = np.random.choice(list(G[node]))
         else:
             node = np.random.choice(list(G))
-        
+
         counter[node] += 1
-        
+
     total = sum(counter.values())
     for key in counter:
         counter[key] /= total
     return counter
 
+
 def recommend_similar_questions(title, num_recommendations=5):
     df = pd.read_csv("Data/leetcode_questions.csv")
 
-    similar_questions = df[["Similar Questions ID", "Question Title", "Similar Questions Text"]]
+    similar_questions = df[
+        ["Similar Questions ID", "Question Title", "Similar Questions Text"]
+    ]
 
     similar_questions["Similar Questions Text"].fillna("", inplace=True)
 
     tfidf_vectorizer = TfidfVectorizer()
-    tfidf_matrix = tfidf_vectorizer.fit_transform(similar_questions["Similar Questions Text"])
+    tfidf_matrix = tfidf_vectorizer.fit_transform(
+        similar_questions["Similar Questions Text"]
+    )
 
     cosine_similarities = linear_kernel(tfidf_matrix, tfidf_matrix)
     title_to_index = {title: index for index, title in enumerate(df["Question Title"])}
@@ -151,4 +175,3 @@ def recommend_similar_questions(title, num_recommendations=5):
     ]
 
     return df["Question Title"].iloc[similar_question_indices]
-

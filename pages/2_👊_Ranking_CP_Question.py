@@ -1,5 +1,12 @@
 import streamlit as st
-from utils import random_walk , preprocess_convert_graph , plot_rank_graph , adj_rank , eign_rank
+from utils import (
+    random_walk,
+    preprocess_convert_graph,
+    plot_rank_graph,
+    adj_rank,
+    eign_rank,
+    rank_to_text,
+)
 import pandas as pd
 import networkx as nx
 
@@ -23,7 +30,7 @@ st.markdown(
 
 st.markdown(
     """
-    # Ranking Pages
+    # Ranking CP questions
 
     In an Information Retrieval (IR) project managing a coding question dataset, the aim is to suggest relevant and high-quality coding problems to users. 
     Relevance is determined by alignment with user-selected topics, while quality is assessed based on user success rates. 
@@ -35,7 +42,9 @@ st.markdown(
 
 G = preprocess_convert_graph()
 pagerank = nx.pagerank(G)
-st.plotly_chart(plot_rank_graph(G , "Networkx Package" ,pagerank) , use_container_width=True)
+st.plotly_chart(
+    plot_rank_graph(G, "Networkx Package", pagerank), use_container_width=True
+)
 
 st.markdown(
     """
@@ -51,15 +60,15 @@ st.markdown(
 
 ranks_rw = random_walk(G)
 
-st.plotly_chart(plot_rank_graph(G , "Random Walk" ,ranks_rw) , use_container_width=True)
+st.plotly_chart(plot_rank_graph(G, "Random Walk", ranks_rw), use_container_width=True)
 
 s1 = pd.Series(pagerank.values())
 s2 = pd.Series(ranks_rw)
 
 df = pd.DataFrame(dict(PageRank=s1, RandomWalk=s2))
-df['Diff'] = df['RandomWalk'] - df['PageRank']
-df = df*100
-st.dataframe(df,use_container_width=True)
+df["Diff"] = df["RandomWalk"] - df["PageRank"]
+df = df * 100
+st.dataframe(df, use_container_width=True)
 
 st.markdown(
     """
@@ -77,9 +86,9 @@ s1 = pd.Series(pagerank.values())
 s2 = pd.Series(ranks_am)
 
 df = pd.DataFrame(dict(PageRank=s1, AdjMatrix=s2))
-df['Diff'] = df['AdjMatrix'] - df['PageRank']
-df = df*100
-st.dataframe(df,use_container_width=True)
+df["Diff"] = df["AdjMatrix"] - df["PageRank"]
+df = df * 100
+st.dataframe(df, use_container_width=True)
 
 
 st.markdown(
@@ -99,6 +108,14 @@ s1 = pd.Series(pagerank.values())
 s2 = pd.Series(ranks_ev)
 
 df = pd.DataFrame(dict(PageRank=s1, Eigenvector=s2))
-df['Diff'] = df['Eigenvector'] - df['PageRank']
-df = df*100
-st.dataframe(df,use_container_width=True)
+df["Diff"] = df["Eigenvector"] - df["PageRank"]
+df = df * 100
+st.dataframe(df, use_container_width=True)
+
+st.markdown(
+    """
+    ## Ranked Top 10 questions
+    """
+)
+
+st.dataframe(rank_to_text(pagerank), use_container_width=True)
