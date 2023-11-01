@@ -8,7 +8,7 @@
   <p align="center">
      Competitive programming is highly popular and immensely valuable for students during placement preparation, as it aids in comprehending Data Structures and Algorithms (DSA). As part of an Information Retrieval package, integrating competitive programming can be achieved by recommending problems to users. Various methods exist to accomplish this. Ranking and displaying problems on the website are fundamental aspects of the project.
     <br />
-    <a href="https://cpirprj.streamlit.app/">View Demo</a>
+    <a href="https://cp-ir-prj.streamlit.app/">View Demo</a>
     ·
     <a href="https://github.com/mathanamathav/CP-IR-prj/issues">Report Bug</a>
     ·
